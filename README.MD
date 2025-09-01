@@ -4,6 +4,6 @@
 
 | Name | Email | FIM ID |
 | ---- | ----- | ------ |
-|      |       |        |
-|      |       |        |
-|      |       |        |
+|Ali Akbar | akbar01@ads.uni-passau.de      |@akbar        |
+|Saeid Khalilian      |khalil10@ads.uni-passau.de       |@khalilian        |
+|Yunus Emre Balkis      |balkis01@ads.uni-passau.de       |@balkis        |
