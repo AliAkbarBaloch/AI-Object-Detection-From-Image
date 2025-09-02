@@ -102,4 +102,3 @@ flask_restx
 pymongo
 transformers
 matplotlib
-unittest
