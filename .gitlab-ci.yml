@@ -10,7 +10,7 @@ test_backend:
   - pip3 install --upgrade pip
   - pip3 install -r backend/requirements.txt
   script:
-  - pytest backend/models/tests/ backend/app/tests/ || pytest backend/tests/
+  - pytest backend/tests/ --junitxml=junit.xml
   artifacts:
     when: always
     paths:
