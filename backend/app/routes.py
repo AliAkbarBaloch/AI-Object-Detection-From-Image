@@ -8,13 +8,20 @@ api = app.api
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 import os
+from flask_restx import Namespace
+
+count_ns = Namespace("Counting", path="/Counting", description="Endpoints for counting objects in images")
+correct_ns = Namespace("Correction", path="/Correction", description="Endpoints for correcting object counts")
+
+api.add_namespace(count_ns)
+api.add_namespace(correct_ns)
 
 
-count_parser = api.parser()
+count_parser = count_ns.parser()
 count_parser.add_argument('item_type', type=str, required=True, help='Type of item to count')
 count_parser.add_argument('image', location='files', type=FileStorage, required=True, help='Image file')
 
-correct_model = api.model('Correct', {
+correct_model = correct_ns.model('Correct', {
     'result_id': fields.String(required=True, description='ID of the result to correct'),
     'correct_count': fields.Integer(required=True, description='Corrected count'),
 })
@@ -25,9 +32,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 from models.model import count_objects
 from models.db import save_result, update_correction
 
-@api.route('/api/count')
+@count_ns.route('/count')
 class CountResource(Resource):
-    @api.expect(count_parser)
+    @count_ns.expect(count_parser)
+    @count_ns.doc(description="Upload an image and get object count, labels, and segments")
     def post(self):
         try:
             args = count_parser.parse_args()
@@ -66,9 +74,10 @@ class CountResource(Resource):
             traceback.print_exc()
             return {'error': f'Unexpected error: {str(e)}'}, 500
 
-@api.route('/api/correct')
+@correct_ns.route('/correct')
 class CorrectResource(Resource):
-    @api.expect(correct_model)
+    @correct_ns.expect(correct_model)
+    @correct_ns.doc(description="Submit corrected count for a previous result")
     def post(self):
         try:
             data = request.json

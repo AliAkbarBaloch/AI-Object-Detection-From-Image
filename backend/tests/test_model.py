@@ -1,6 +1,7 @@
 import unittest
 from models.model import count_objects
 import os
+from models.db import client
 
 class ModelPipelineTestCase(unittest.TestCase):
     def test_count_objects(self):
@@ -15,3 +16,5 @@ class ModelPipelineTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    if client is not None:
+        client.close()

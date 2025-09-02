@@ -41,3 +41,4 @@ def get_result(result_id):
     if results_collection is None:
         return None
     return results_collection.find_one({'_id': ObjectId(result_id)})
+
