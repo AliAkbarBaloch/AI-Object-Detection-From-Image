@@ -6,13 +6,13 @@ test_backend:
   stage: test
   image: python:3.10
   before_script:
-  - python -m venv venv
+  - python3 -m venv venv
   - source venv/bin/activate
-  - python -m pip install --upgrade pip
-  - python -m pip install -r backend/requirements.txt
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install -r backend/requirements.txt
   script:
   - source venv/bin/activate
-  - python -m pytest backend/tests/ --junitxml=junit.xml
+  - python3 -m pytest backend/tests/ --junitxml=junit.xml
   artifacts:
     when: always
     paths:
