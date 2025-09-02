@@ -6,11 +6,11 @@ test_backend:
   stage: test
   image: python:3.12
   before_script:
-    - python --version
-    - pip install --upgrade pip
-    - pip install -r backend/requirements.txt
+  - python3 --version
+  - pip3 install --upgrade pip
+  - pip3 install -r backend/requirements.txt
   script:
-    - pytest backend/models/tests/ backend/app/tests/ || pytest backend/tests/
+  - pytest backend/models/tests/ backend/app/tests/ || pytest backend/tests/
   artifacts:
     when: always
     paths:
