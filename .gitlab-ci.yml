@@ -16,7 +16,7 @@ test:
     - python -m venv venv
     - source venv/bin/activate
     - pip install --upgrade pip
-    - pip install -r requirements.txt
+    - pip install -r backend/requirements.txt --upgrade --force-reinstall
     - pip install coverage
   script:
     - coverage run -m unittest discover backend/tests
