@@ -1,5 +1,6 @@
 import unittest
 from models.model import count_objects
+from PIL import Image
 import os
 import numpy as np
 
