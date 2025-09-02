@@ -11,6 +11,7 @@ test_backend:
     - pip install --upgrade pip
     - pip install -r backend/requirements.txt
     - export PYTHONPATH=$PYTHONPATH:$(pwd)/backend
+    - apt-get update && apt-get install -y libgl1 libglib2.0-0
   script:
     - pytest backend/tests/ --junitxml=junit.xml
   artifacts:
