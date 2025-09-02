@@ -98,3 +98,8 @@ wcwidth==0.2.13
 xxhash==3.5.0
 yarl==1.20.1
 pytest
+flask_restx
+pymongo
+transformers
+matplotlib
+unittest
