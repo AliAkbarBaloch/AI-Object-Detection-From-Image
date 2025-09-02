@@ -4,15 +4,13 @@ stages:
 
 test_backend:
   stage: test
-  image: python:3.10
+  image: pytorch/pytorch:2.0.0-cpu
   before_script:
-  - python3 -m venv venv
-  - source venv/bin/activate
-  - python3 -m pip install --upgrade pip
-  - python3 -m pip install -r backend/requirements.txt
+    - python --version
+    - pip install --upgrade pip
+    - pip install -r backend/requirements.txt
   script:
-  - source venv/bin/activate
-  - python3 -m pytest backend/tests/ --junitxml=junit.xml
+    - pytest backend/tests/ --junitxml=junit.xml
   artifacts:
     when: always
     paths:
