@@ -18,7 +18,12 @@ test:
     - pip install --upgrade pip
     - pip install -r backend/requirements.txt --upgrade --force-reinstall
     - pip install coverage
+    - pip install --upgrade pip
+    - pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+   
+
   script:
+    - export PYTHONPATH=.
     - coverage run -m unittest discover backend/tests
     - coverage report -m
     - coverage xml
