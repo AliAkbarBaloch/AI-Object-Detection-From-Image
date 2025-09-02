@@ -100,5 +100,3 @@ flask_restx
 pymongo
 transformers
 matplotlib
-torch>=2.0
-torchvision>=0.15
