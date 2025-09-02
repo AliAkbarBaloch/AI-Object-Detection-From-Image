@@ -10,6 +10,7 @@ test_backend:
     - python --version
     - pip install --upgrade pip
     - pip install -r backend/requirements.txt
+    - export PYTHONPATH=$PYTHONPATH:$(pwd)/backend
   script:
     - pytest backend/tests/ --junitxml=junit.xml
   artifacts:
