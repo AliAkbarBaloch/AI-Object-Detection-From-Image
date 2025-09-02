@@ -30,8 +30,10 @@ def count_objects(image_path, item_type):
         stability_score_thresh=0.85,
         min_mask_region_area=500,
     )
-
-    masks = mask_generator.generate(np.array(image))
+   
+    image_np = np.array(image).astype(np.float32)
+    masks = mask_generator.generate(image_np)
+    #masks = mask_generator.generate(np.array(image))
     masks_sorted = sorted(masks, key=lambda x: x['area'], reverse=True)
 
     predicted_panoptic_map = np.zeros((height, width), dtype=np.int32)
