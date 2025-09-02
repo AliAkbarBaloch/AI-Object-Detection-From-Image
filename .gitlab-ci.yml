@@ -4,7 +4,7 @@ stages:
 
 test_backend:
   stage: test
-  image: python:3.12
+  image: python:3.13
   before_script:
   - python3 -m venv venv
   - source venv/bin/activate
