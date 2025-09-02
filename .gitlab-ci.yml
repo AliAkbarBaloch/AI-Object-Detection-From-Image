@@ -22,9 +22,8 @@ test:
     - coverage run -m unittest discover backend/tests
     - coverage report -m
     - coverage xml
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
   artifacts:
-    reports:
-      cobertura: coverage.xml
     paths:
       - coverage.xml
     expire_in: 1 week
