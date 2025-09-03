@@ -1,6 +1,7 @@
 from app import app  # import app, not api
 from flask import request
 from flask_restx import Resource, fields
+from werkzeug.exceptions import BadRequest
 
 # Access Api via app.api
 api = app.api
@@ -48,7 +49,11 @@ class CountResource(Resource):
     @count_ns.doc(description="Upload an image and get object count, labels, and segments")
     def post(self):
         try:
-            args = count_parser.parse_args()
+            try:
+                args = count_parser.parse_args()
+            except BadRequest as e:
+                # Return a proper 400 for validation errors rather than 500
+                return {'error': 'Input payload validation failed', 'message': str(e)}, 400
             item_type = args.get('item_type')
             image_file = args.get('image')
             # Optional header to associate results with a user

@@ -1,7 +1,9 @@
 [run]
 branch = True
 source =
-    backend/app
+    app
+    models
+
 omit =
     backend/models/model.py
     backend/models/db.py

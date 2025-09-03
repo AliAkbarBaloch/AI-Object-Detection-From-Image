@@ -3,6 +3,8 @@ stages:
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PYTHONPATH: "$CI_PROJECT_DIR/backend"
+  FAST_MODE: 1
 
 cache:
   paths:
