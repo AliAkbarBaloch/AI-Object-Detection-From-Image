@@ -3,6 +3,8 @@
 source =
     backend/app
     backend/models
+branch = True
+relative_files = True
 
 [report]
 # Exclude tests, virtual envs, migrations etc.
@@ -10,3 +12,15 @@ omit =
     */tests/*
     */venv/*
     */migrations/*
+    */__pycache__/*
+    */__init__.py
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.: 
+    raise NotImplementedError
+    pass
+
+[paths]
+backend =
+    backend
+    /builds/aie/ai-engineering-lab/student-projects/group-2/backend
