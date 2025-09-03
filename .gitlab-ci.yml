@@ -11,15 +11,15 @@ cache:
 
 test:
   stage: test
-  image: pytorch/pytorch:latest
-  # image: pytorch/pytorch:latest-cuda11.8-cudnn8-runtime
+  #image: pytorch/pytorch:latest
+  image: pytorch/pytorch:latest-cuda11.8-cudnn8-runtime
   before_script:
     - python -m venv venv
     - source venv/bin/activate
     - pip install -r backend/requirements.txt
     - pip install coverage
-    - pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu # This is for local
-    #- pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+    #- pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu # This is for local
+    - pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
     - apt-get update --fix-missing && apt-get install -y libgl1 libglib2.0-0
 
   script:
