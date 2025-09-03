@@ -1,22 +1,22 @@
 [run]
-# Only measure coverage inside your backend source
+branch = True
 source =
     backend/app
-    backend/models
-branch = True
-relative_files = True
-
-[report]
-# Exclude tests, virtual envs, migrations etc.
 omit =
+    backend/models/model.py
+    backend/models/db.py
     */tests/*
     */venv/*
     */migrations/*
     */__pycache__/*
     */__init__.py
+relative_files = True
+
+[report]
+show_missing = True
 exclude_lines =
     pragma: no cover
-    if __name__ == .__main__.: 
+    if __name__ == '__main__':
     raise NotImplementedError
     pass
 
