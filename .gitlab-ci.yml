@@ -21,6 +21,7 @@ test:
     - pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu # This is fast as compare to GPU
     #- pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
     - apt-get update --fix-missing && apt-get install -y libgl1 libglib2.0-0
+    - pip install --upgrade pip
 
   script:
     - export PYTHONPATH=$CI_PROJECT_DIR/backend
