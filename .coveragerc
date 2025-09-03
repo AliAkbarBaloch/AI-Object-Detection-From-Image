@@ -1,0 +1,12 @@
+[run]
+# Only measure coverage inside your backend source
+source =
+    backend/app
+    backend/models
+
+[report]
+# Exclude tests, virtual envs, migrations etc.
+omit =
+    */tests/*
+    */venv/*
+    */migrations/*
