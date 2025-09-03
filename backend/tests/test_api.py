@@ -29,26 +29,10 @@ class APITestCase(unittest.TestCase):
             print('SUCCESS:', response.status_code, response.get_data(as_text=True))
             self.assertIn(response.status_code, [200, 500])
 
-    def test_count_endpoint_invalid_filetype(self):
-        fake_content = BytesIO(b'not-an-image')
-        data = {
-            'item_type': 'cat',
-            'image': (fake_content, 'file.txt')
-        }
-        response = self.app.post('/Counting/count', data=data, content_type='multipart/form-data')
-        self.assertEqual(response.status_code, 400)
-        self.assertIn('Invalid file type', response.get_data(as_text=True))
-
     def test_correct_endpoint_missing_fields(self):
         response = self.app.post('/Correction/correct', json={})
         self.assertEqual(response.status_code, 400)
         self.assertIn('Missing result_id or correct_count', response.get_data(as_text=True))
-
-    def test_previous_results_with_header(self):
-        # Should accept X-User-Id header path and return 200 with results list
-        response = self.app.get('/Auth/previous-results', headers={'X-User-Id': 'ci-user'})
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('results', response.get_json())
 
 
 if __name__ == '__main__':

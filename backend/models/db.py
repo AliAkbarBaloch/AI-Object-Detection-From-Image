@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 
@@ -23,7 +23,7 @@ def save_result(image_path, item_type, model_count, user_correction=None, user_i
     if results_collection is None:
         return "ci-dummy-id"
     result = {
-        'timestamp': datetime.utcnow(),
+        'timestamp': datetime.now(timezone.utc),
         'image_path': image_path,
         'item_type': item_type,
         'model_count': model_count,
@@ -70,7 +70,7 @@ def create_user(email: str, password: str):
     doc = {
         'email': email,
         'password': password,  # plaintext as requested
-        'created_at': datetime.utcnow(),
+        'created_at': datetime.now(timezone.utc),
     }
     return users_collection.insert_one(doc).inserted_id
 

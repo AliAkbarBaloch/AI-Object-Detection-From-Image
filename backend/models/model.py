@@ -1,41 +1,16 @@
-import os
-import urllib.request
-import numpy as np
+import matplotlib.pyplot as plt
 from PIL import Image
+import numpy as np
+import torch
+import torch.nn.functional as F
+from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
+import os, urllib.request
+import torchvision.transforms as tf
+from transformers import AutoImageProcessor, AutoModelForImageClassification, pipeline
 
 TOP_N = 10
 
-def _fast_count(image_path, item_type):
-    import cv2
-    img = cv2.imread(image_path)
-    if img is None:
-        return {'count': 0, 'labels': [], 'segments': 0}
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)
-    # Simple threshold and contour count as a proxy
-    _, th = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    cnts, _ = cv2.findContours(th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # Filter very small blobs
-    areas = [cv2.contourArea(c) for c in cnts]
-    big = [a for a in areas if a > 50]
-    count = len(big)
-    return {'count': count, 'labels': [item_type]*count, 'segments': count}
-
-
 def count_objects(image_path, item_type):
-    # Fast path for local/dev/CI when heavy models are not available
-    if os.getenv('FAST_MODE') == '1' or os.getenv('CI') == 'true':
-        return _fast_count(image_path, item_type)
-    return _heavy_count(image_path, item_type)
-
-
-def _heavy_count(image_path, item_type):  # pragma: no cover
-    # Lazy import heavy deps to avoid import-time failures
-    import torch
-    import torchvision.transforms as tf
-    from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
-    from transformers import AutoImageProcessor, AutoModelForImageClassification, pipeline
-
     image = Image.open(image_path)
     height, width = image.size[1], image.size[0]
     checkpoint_path = os.path.join(os.path.dirname(__file__), 'sam_vit_b_01ec64.pth')
@@ -54,9 +29,10 @@ def _heavy_count(image_path, item_type):  # pragma: no cover
         stability_score_thresh=0.85,
         min_mask_region_area=500,
     )
-
+   
     image_np = np.array(image).astype(np.float32)
     masks = mask_generator.generate(image_np)
+    #masks = mask_generator.generate(np.array(image))
     masks_sorted = sorted(masks, key=lambda x: x['area'], reverse=True)
 
     predicted_panoptic_map = np.zeros((height, width), dtype=np.int32)
@@ -99,7 +75,15 @@ def _heavy_count(image_path, item_type):  # pragma: no cover
 
     label_classifier = pipeline("zero-shot-classification", model="typeform/distilbert-base-uncased-mnli")
     candidate_labels = [
-        "car","cat","tree","dog","building","person","sky","ground","hardware",
+        "car",
+        "cat",
+        "tree",
+        "dog",
+        "building",
+        "person",
+        "sky",
+        "ground",
+        "hardware",
     ]
     labels = []
     for predicted_class in predicted_classes:
@@ -108,4 +92,8 @@ def _heavy_count(image_path, item_type):  # pragma: no cover
         labels.append(label)
 
     count = sum(1 for label in labels if label == item_type)
-    return {'count': count, 'labels': labels, 'segments': len(segments)}
+    return {
+        'count': count,
+        'labels': labels,
+        'segments': len(segments)
+    }

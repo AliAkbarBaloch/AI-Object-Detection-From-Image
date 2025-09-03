@@ -52,12 +52,9 @@ class CountResource(Resource):
             try:
                 args = count_parser.parse_args()
             except BadRequest as e:
-                # Return a proper 400 for validation errors rather than 500
                 return {'error': 'Input payload validation failed', 'message': str(e)}, 400
             item_type = args.get('item_type')
             image_file = args.get('image')
-            # Optional header to associate results with a user
-            user_id = request.headers.get('X-User-Id')
             if not item_type:
                 return {'error': 'Missing item_type'}, 400
             if not image_file:
@@ -77,7 +74,7 @@ class CountResource(Resource):
             except Exception as e:
                 return {'error': f'Model error: {str(e)}'}, 500
             try:
-                result_id = save_result(image_path, item_type, result['count'], user_id=user_id)
+                result_id = save_result(image_path, item_type, result['count'])
             except Exception as e:
                 return {'error': f'Database error: {str(e)}'}, 500
             return {
@@ -109,6 +106,7 @@ class CorrectResource(Resource):
             return {'message': 'Correction saved'}, 200
         except Exception as e:
             return {'error': f'Unexpected error: {str(e)}'}, 500
+
 
 
 # -----------------------
