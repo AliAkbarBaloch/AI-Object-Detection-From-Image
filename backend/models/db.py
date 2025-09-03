@@ -11,13 +11,15 @@ if not os.environ.get("CI") == "true":
     client = MongoClient(MONGO_URI)
     db = client[DB_NAME]
     results_collection = db[COLLECTION_NAME]
+    users_collection = db.get_collection('users')
 else:
     client = None
     db = None
     results_collection = None
+    users_collection = None
 
 
-def save_result(image_path, item_type, model_count, user_correction=None):
+def save_result(image_path, item_type, model_count, user_correction=None, user_id: str | None = None):
     if results_collection is None:
         return "ci-dummy-id"
     result = {
@@ -25,6 +27,7 @@ def save_result(image_path, item_type, model_count, user_correction=None):
         'image_path': image_path,
         'item_type': item_type,
         'model_count': model_count,
+        'user_id': user_id,
         'user_correction': user_correction
     }
     return results_collection.insert_one(result).inserted_id
@@ -41,4 +44,56 @@ def get_result(result_id):
     if results_collection is None:
         return None
     return results_collection.find_one({'_id': ObjectId(result_id)})
+
+
+# ---------------------
+# User management utils
+# ---------------------
+
+def get_user_by_email(email: str):
+    if users_collection is None:
+        return None
+    return users_collection.find_one({'email': email})
+
+
+def create_user(email: str, password: str):
+    """
+    Creates a user document with email and password stored in plaintext (per requirement).
+    Returns inserted ObjectId.
+    """
+    if users_collection is None:
+        # Return a dummy id in CI to avoid DB dependency
+        return "ci-user-id"
+    existing = users_collection.find_one({'email': email})
+    if existing:
+        return None
+    doc = {
+        'email': email,
+        'password': password,  # plaintext as requested
+        'created_at': datetime.utcnow(),
+    }
+    return users_collection.insert_one(doc).inserted_id
+
+
+def verify_user(email: str, password: str):
+    if users_collection is None:
+        return None
+    user = users_collection.find_one({'email': email, 'password': password})
+    return user
+
+
+def get_password_for_email(email: str):
+    if users_collection is None:
+        return None
+    user = users_collection.find_one({'email': email})
+    if not user:
+        return None
+    return user.get('password')
+
+
+def get_results_for_user(user_id: str, limit: int = 50):
+    if results_collection is None:
+        return []
+    cursor = results_collection.find({'user_id': user_id}).sort('timestamp', -1).limit(limit)
+    return list(cursor)
 

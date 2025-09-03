@@ -12,9 +12,11 @@ from flask_restx import Namespace
 
 count_ns = Namespace("Counting", path="/Counting", description="Endpoints for counting objects in images")
 correct_ns = Namespace("Correction", path="/Correction", description="Endpoints for correcting object counts")
+auth_ns = Namespace("Auth", path="/Auth", description="User authentication and history endpoints")
 
 api.add_namespace(count_ns)
 api.add_namespace(correct_ns)
+api.add_namespace(auth_ns)
 
 
 count_parser = count_ns.parser()
@@ -30,7 +32,15 @@ UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 from models.model import count_objects
-from models.db import save_result, update_correction
+from models.db import (
+    save_result,
+    update_correction,
+    create_user,
+    verify_user,
+    get_user_by_email,
+    get_password_for_email,
+    get_results_for_user,
+)
 
 @count_ns.route('/count')
 class CountResource(Resource):
@@ -41,6 +51,8 @@ class CountResource(Resource):
             args = count_parser.parse_args()
             item_type = args.get('item_type')
             image_file = args.get('image')
+            # Optional header to associate results with a user
+            user_id = request.headers.get('X-User-Id')
             if not item_type:
                 return {'error': 'Missing item_type'}, 400
             if not image_file:
@@ -60,7 +72,7 @@ class CountResource(Resource):
             except Exception as e:
                 return {'error': f'Model error: {str(e)}'}, 500
             try:
-                result_id = save_result(image_path, item_type, result['count'])
+                result_id = save_result(image_path, item_type, result['count'], user_id=user_id)
             except Exception as e:
                 return {'error': f'Database error: {str(e)}'}, 500
             return {
@@ -92,3 +104,88 @@ class CorrectResource(Resource):
             return {'message': 'Correction saved'}, 200
         except Exception as e:
             return {'error': f'Unexpected error: {str(e)}'}, 500
+
+
+# -----------------------
+# Auth and user endpoints
+# -----------------------
+
+register_model = auth_ns.model('Register', {
+    'email': fields.String(required=True, description='User email'),
+    'password': fields.String(required=True, description='User password'),
+})
+
+login_model = auth_ns.model('Login', {
+    'email': fields.String(required=True, description='User email'),
+    'password': fields.String(required=True, description='User password'),
+})
+
+forgot_model = auth_ns.model('ForgotPassword', {
+    'email': fields.String(required=True, description='User email'),
+})
+
+
+@auth_ns.route('/register')
+class RegisterResource(Resource):
+    @auth_ns.expect(register_model)
+    def post(self):
+        data = request.json or {}
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return {'error': 'email and password are required'}, 400
+        # If user exists, instruct to login
+        if get_user_by_email(email):
+            return {'message': 'User already exists. Please login.'}, 200
+        uid = create_user(email, password)
+        if uid is None:
+            return {'message': 'User already exists. Please login.'}, 200
+        return {'message': 'Registered successfully', 'user_id': str(uid)}, 201
+
+
+@auth_ns.route('/login')
+class LoginResource(Resource):
+    @auth_ns.expect(login_model)
+    def post(self):
+        data = request.json or {}
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return {'error': 'email and password are required'}, 400
+        user = verify_user(email, password)
+        if not user:
+            return {'error': 'Invalid credentials'}, 401
+        return {'message': 'Login successful', 'user_id': str(user.get('_id')), 'email': user.get('email')}, 200
+
+
+@auth_ns.route('/forgot-password')
+class ForgotPasswordResource(Resource):
+    @auth_ns.expect(forgot_model)
+    def post(self):
+        data = request.json or {}
+        email = data.get('email')
+        if not email:
+            return {'error': 'email is required'}, 400
+        password = get_password_for_email(email)
+        if password is None:
+            return {'error': 'Email not found'}, 404
+        # As per requirement, return plaintext password
+        return {'email': email, 'password': password}, 200
+
+
+@auth_ns.route('/previous-results')
+class PreviousResultsResource(Resource):
+    @auth_ns.doc(params={'user_id': 'The user id to fetch results for'}, description='Get previous results for the logged-in user')
+    def get(self):
+        user_id = request.args.get('user_id') or request.headers.get('X-User-Id')
+        if not user_id:
+            return {'error': 'user_id is required'}, 400
+        results = get_results_for_user(user_id)
+        # Convert ObjectIds to strings
+        def transform(doc):
+            doc = dict(doc)
+            if '_id' in doc:
+                doc['_id'] = str(doc['_id'])
+            return doc
+        payload = [transform(r) for r in results]
+        return {'results': payload}, 200
