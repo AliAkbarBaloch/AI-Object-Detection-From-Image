@@ -41,6 +41,7 @@ from models.db import (
     get_user_by_email,
     get_password_for_email,
     get_results_for_user,
+    results_collection,
 )
 
 @count_ns.route('/count')
@@ -77,6 +78,13 @@ class CountResource(Resource):
                 result_id = save_result(image_path, item_type, result['count'])
             except Exception as e:
                 return {'error': f'Database error: {str(e)}'}, 500
+            # Best-effort: also persist a string 'result_id' field into the same document for convenient lookups
+            try:
+                if results_collection is not None:
+                    results_collection.update_one({'_id': result_id}, {'$set': {'result_id': str(result_id)}})
+            except Exception:
+                # Don't fail the request if this auxiliary update fails
+                pass
             return {
                 'result_id': str(result_id),
                 'count': result['count'],

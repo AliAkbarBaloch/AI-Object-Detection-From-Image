@@ -30,7 +30,14 @@ def save_result(image_path, item_type, model_count, user_correction=None, user_i
         'user_id': user_id,
         'user_correction': user_correction
     }
-    return results_collection.insert_one(result).inserted_id
+   # return results_collection.insert_one(result).inserted_id
+    inserted_id = results_collection.insert_one(result).inserted_id
+    try:
+        results_collection.update_one({'_id': inserted_id}, {'$set': {'result_id': str(inserted_id)}})
+    except Exception:
+        # Best-effort; insertion already succeeded
+        pass
+    return inserted_id
 
 def update_correction(result_id, correct_count):
     if results_collection is None:
