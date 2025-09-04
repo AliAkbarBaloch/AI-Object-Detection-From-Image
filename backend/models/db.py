@@ -98,9 +98,26 @@ def get_password_for_email(email: str):
     return user.get('password')
 
 
+# def get_results_for_user(user_id: str, limit: int = 50):
+#     if results_collection is None:
+#         return []
+#     cursor = results_collection.find({'item_type': "cat"}).sort('timestamp', -1).limit(limit)
+#     return list(cursor)
+
+
 def get_results_for_user(user_id: str, limit: int = 50):
+    user_id = user_id.strip().strip('"').strip("'")
     if results_collection is None:
         return []
+    print("user_id in db:", user_id)
     cursor = results_collection.find({'user_id': user_id}).sort('timestamp', -1).limit(limit)
-    return list(cursor)
+    results = []
+
+    for doc in cursor:
+        doc['_id'] = str(doc['_id'])  # Convert ObjectId to string
+        if 'timestamp' in doc and doc['timestamp']:
+            doc['timestamp'] = doc['timestamp'].isoformat()  # Convert datetime to ISO string
+        results.append(doc)
+    print("results:", results)
+    return results
 

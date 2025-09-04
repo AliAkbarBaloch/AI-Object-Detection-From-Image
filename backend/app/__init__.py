@@ -2,9 +2,10 @@ from flask import Flask
 from flask_restx import Api
 from werkzeug.exceptions import BadRequest
 from flask import jsonify
-
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 #api = Api(app, title='Object Counter API', description='API for counting objects in images and correcting results',doc="/docs")
 api = Api(
     app, 

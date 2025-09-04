@@ -29,8 +29,17 @@ correct_model = correct_ns.model('Correct', {
     'correct_count': fields.Integer(required=True, description='Corrected count'),
 })
 
-UPLOAD_FOLDER = 'uploads'
+# UPLOAD_FOLDER = 'uploads'
+# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+from flask import Flask, send_from_directory
+import os
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 from models.model import count_objects
 from models.db import (
@@ -56,6 +65,7 @@ class CountResource(Resource):
                 return {'error': 'Input payload validation failed', 'message': str(e)}, 400
             item_type = args.get('item_type')
             image_file = args.get('image')
+            user_id = request.form.get("user_id")
             if not item_type:
                 return {'error': 'Missing item_type'}, 400
             if not image_file:
@@ -65,7 +75,9 @@ class CountResource(Resource):
             if not image_file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
                 return {'error': 'Invalid file type'}, 400
             filename = secure_filename(image_file.filename)
-            image_path = os.path.join(UPLOAD_FOLDER, filename)
+# Force forward slashes for DB and URL storage
+            UPLOAD_FOLDER = 'uploads'
+            image_path = os.path.join(UPLOAD_FOLDER, filename).replace("\\", "/")
             try:
                 image_file.save(image_path)
             except Exception as e:
@@ -75,7 +87,7 @@ class CountResource(Resource):
             except Exception as e:
                 return {'error': f'Model error: {str(e)}'}, 500
             try:
-                result_id = save_result(image_path, item_type, result['count'])
+                result_id = save_result(image_path, item_type, result['count'],"",user_id)
             except Exception as e:
                 return {'error': f'Database error: {str(e)}'}, 500
             # Best-effort: also persist a string 'result_id' field into the same document for convenient lookups
@@ -85,11 +97,14 @@ class CountResource(Resource):
             except Exception:
                 # Don't fail the request if this auxiliary update fails
                 pass
+            image_url = request.host_url.rstrip('/') + f"/uploads/{filename}"
+            print("image_url:", image_url)
             return {
                 'result_id': str(result_id),
                 'count': result['count'],
                 'labels': result['labels'],
-                'segments': result['segments']
+                'segments': result['segments'],
+                'image_url': image_url 
             }, 200
         except Exception as e:
             import traceback
