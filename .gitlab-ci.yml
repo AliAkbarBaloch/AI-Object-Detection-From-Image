@@ -28,6 +28,7 @@ test:
   script:
     - export PYTHONPATH=$CI_PROJECT_DIR/backend
     - coverage run -m unittest discover backend/tests
+    - ls -l backend/uploads
     - coverage report -m
     - coverage xml
   coverage: '/^TOTAL.*\s+(\d+\%)$/'

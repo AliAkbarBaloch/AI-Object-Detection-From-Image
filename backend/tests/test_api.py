@@ -12,7 +12,8 @@ class APITestCase(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
-        self.test_image_path = os.path.join(os.path.dirname(__file__), '../uploads/image.png')
+        # self.test_image_path = os.path.join(os.path.dirname(__file__), '../uploads/image.png')
+        self.test_image_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads', 'image.png'))
 
     def test_count_endpoint_no_image(self):
         data = {'item_type': 'car'}
