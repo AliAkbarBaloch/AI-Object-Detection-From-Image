@@ -75,19 +75,23 @@ class CountResource(Resource):
             if not image_file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
                 return {'error': 'Invalid file type'}, 400
             filename = secure_filename(image_file.filename)
-# Force forward slashes for DB and URL storage
-            UPLOAD_FOLDER = 'uploads'
-            image_path = os.path.join(UPLOAD_FOLDER, filename).replace("\\", "/")
+            # Use absolute path for saving
+            UPLOAD_FOLDER_ABS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'uploads')
+            os.makedirs(UPLOAD_FOLDER_ABS, exist_ok=True)
+            image_path_abs = os.path.join(UPLOAD_FOLDER_ABS, filename)
             try:
-                image_file.save(image_path)
+                image_file.save(image_path_abs)
             except Exception as e:
                 return {'error': f'Failed to save image: {str(e)}'}, 500
+
+            # Store relative path in DB
+            db_image_path = f"uploads/{filename}"
             try:
-                result = count_objects(image_path, item_type)
+                result = count_objects(db_image_path, item_type)
             except Exception as e:
                 return {'error': f'Model error: {str(e)}'}, 500
             try:
-                result_id = save_result(image_path, item_type, result['count'],"",user_id)
+                result_id = save_result(db_image_path, item_type, result['count'],"",user_id)
             except Exception as e:
                 return {'error': f'Database error: {str(e)}'}, 500
             # Best-effort: also persist a string 'result_id' field into the same document for convenient lookups
