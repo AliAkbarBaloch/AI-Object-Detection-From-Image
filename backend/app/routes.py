@@ -83,13 +83,12 @@ class CountResource(Resource):
                 image_file.save(image_path_abs)
             except Exception as e:
                 return {'error': f'Failed to save image: {str(e)}'}, 500
-
-            # Store relative path in DB
-            db_image_path = f"uploads/{filename}"
             try:
-                result = count_objects(db_image_path, item_type)
+                result = count_objects(image_path_abs, item_type)
             except Exception as e:
                 return {'error': f'Model error: {str(e)}'}, 500
+            # Store relative path in DB
+            db_image_path = f"uploads/{filename}"
             try:
                 result_id = save_result(db_image_path, item_type, result['count'],"",user_id)
             except Exception as e:
