@@ -24,11 +24,10 @@ test:
     #- pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
     - apt-get update --fix-missing && apt-get install -y libgl1 libglib2.0-0
     - pip install --upgrade pip
-    - apt-get update && apt-get install -y file
 
   script:
     - export PYTHONPATH=$CI_PROJECT_DIR/backend
-    - file backend/uploads/image.png
+    - python -c "from PIL import Image; Image.open('backend/uploads/image.png').verify(); print('Image is valid')"
     - ls -lh backend/uploads/image.png
     - ls -l backend/uploads
     - coverage run -m unittest discover backend/tests
