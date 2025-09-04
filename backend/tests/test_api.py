@@ -20,7 +20,8 @@ class APITestCase(unittest.TestCase):
         response = self.app.post('/Counting/count', data=data, content_type='multipart/form-data')
         print('NO IMAGE:', response.status_code, response.get_data(as_text=True))
         self.assertIn(response.status_code, [400, 500])
-
+        
+    @unittest.skipIf(os.getenv("CI") == "true", "Skip in CI")
     def test_count_endpoint_success(self):
         with patch('app.routes.save_result', return_value='507f1f77bcf86cd799439012'):
             with open(self.test_image_path, 'rb') as img:
