@@ -100,3 +100,4 @@ flask_restx
 pymongo
 transformers
 matplotlib
+flask_cors
