@@ -5,6 +5,7 @@ from flask import jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32 MB max upload size
 CORS(app, resources={r"/*": {"origins": "*"}})
 #api = Api(app, title='Object Counter API', description='API for counting objects in images and correcting results',doc="/docs")
 api = Api(

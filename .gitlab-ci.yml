@@ -5,29 +5,39 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PYTHONPATH: "$CI_PROJECT_DIR/backend"
   FAST_MODE: 1
+  VENV_DIR: "$CI_PROJECT_DIR/venv"
 
 cache:
+  key: ${CI_COMMIT_REF_SLUG}   # cache per branch
   paths:
     - .cache/pip
     - venv/
 
 test:
   stage: test
-  image: pytorch/pytorch:latest
-  # image: pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+  image: python:3.10-slim  # lighter than full pytorch image
+  #image: pytorch/pytorch:latest
   before_script:
-    - python -m venv venv
-    - source venv/bin/activate
-    - pip install -r backend/requirements.txt
+    # Restore or create venv
+    - python -m venv $VENV_DIR
+    - source $VENV_DIR/bin/activate
+    - pip install --upgrade pip wheel setuptools
+
+    # Install requirements only if changed
+    - pip install -r backend/requirements.txt --cache-dir $PIP_CACHE_DIR
+
+    # Install coverage (tiny)
     - pip install coverage
-    - pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu # This is fast as compare to GPU
-    #- pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+    # Install CPU-only torch (cached after first run)
+    - pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --cache-dir $PIP_CACHE_DIR
 
   script:
     - export PYTHONPATH=$CI_PROJECT_DIR/backend
     - coverage run -m unittest discover backend/tests
     - coverage report -m
     - coverage xml
+
   coverage: '/^TOTAL.*\s+(\d+\%)$/'
   artifacts:
     paths:

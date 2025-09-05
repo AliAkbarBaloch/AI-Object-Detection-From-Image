@@ -1,16 +1,7 @@
 import { useState } from "react";
-import { uploadImage } from "../api/imageApi";
-import {
-  Card,
-  CardContent,
-  Button,
-  Typography,
-  Box,
-  TextField,
-  Autocomplete,
-} from "@mui/material";
+import { uploadImage, uploadImagesBatch } from "../api/imageApi";
+import { Card, CardContent, Button, Typography, Box, TextField, Autocomplete } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-
 import Loader from "./Loader";
 import { useSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +19,7 @@ const options = [
 ];
 
 const ImageUpload = ({ setResult }) => {
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [itemType, setItemType] = useState("");
   const [loading, setLoading] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
@@ -37,18 +28,25 @@ const ImageUpload = ({ setResult }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file || !itemType) {
-      enqueueSnackbar("Please select an image and item type", {
+    if (!files.length || !itemType) {
+      enqueueSnackbar("Please select at least one image and item type", {
         variant: "warning",
       });
       return;
     }
     try {
       setLoading(true);
-      const data = await uploadImage(file, itemType);
-      setResult(data);
-      navigate("/detection-result", { state: { result: data } });
-      enqueueSnackbar("Image uploaded successfully!", { variant: "success" });
+      let data;
+      if (files.length === 1) {
+        data = await uploadImage(files[0], itemType);
+        setResult(data);
+        navigate("/detection-result", { state: { result: data } });
+      } else {
+        data = await uploadImagesBatch(files, itemType);
+        setResult(data);
+        navigate("/detection-result", { state: { result: data } });
+      }
+      enqueueSnackbar("Image(s) uploaded successfully!", { variant: "success" });
     } catch (err) {
       enqueueSnackbar(err?.response?.data?.error || "Upload failed", {
         variant: "error",
@@ -59,33 +57,33 @@ const ImageUpload = ({ setResult }) => {
   };
 
   return (
-  <Card
-  sx={{
-    maxWidth: 800, // slightly wider
-    width: "100%",
-    mx: "auto",
-    backgroundColor: "#f5f5f7", // soft white
-    color: "#111",
-    borderRadius: 4, // 32px for premium feel
-    padding: 5, // 40px padding
-    boxShadow: "0 14px 60px rgba(0,0,0,0.25)", // soft shadow
-    transition: "all 0.3s ease",
-    "&:hover": {
-      boxShadow: "0 20px 70px rgba(0,150,255,0.2)",
-      transform: "translateY(-6px)",
-    },
-  }}
->
-  <CardContent>
-    <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
-      Upload an Image for Detection
-    </Typography>
-    <Typography variant="body2" sx={{ color: "#555", mb: 4 }}>
-      Choose an image and the item type to get a detected count from the model.
-    </Typography>
+    <Card
+      sx={{
+        maxWidth: 800,
+        width: "100%",
+        mx: "auto",
+        backgroundColor: "#f5f5f7",
+        color: "#111",
+        borderRadius: 4,
+        p: { xs: 2, sm: 3 },
+        boxShadow: "0 14px 60px rgba(0,0,0,0.25)",
+        transition: "all 0.3s ease",
+        "&:hover": {
+          boxShadow: "0 20px 70px rgba(0,150,255,0.2)",
+          transform: "translateY(-6px)",
+        },
+      }}
+    >
+      <CardContent>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1.5 }}>
+          Upload an Image for Detection
+        </Typography>
+        <Typography variant="body2" sx={{ color: "#555", mb: 2 }}>
+          Choose an image and the item type to get a detected count from the model.
+        </Typography>
 
-    <form onSubmit={handleSubmit}>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <form onSubmit={handleSubmit}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {/* File Upload */}
         <Box>
           <Button
@@ -109,14 +107,17 @@ const ImageUpload = ({ setResult }) => {
               type="file"
               accept="image/*"
               hidden
-              onChange={(e) => setFile(e.target.files[0])}
+              multiple
+              onChange={(e) => setFiles(Array.from(e.target.files))}
             />
           </Button>
 
-          {file && (
-            <Typography sx={{ mt: 1, color: "#333", fontWeight: 600 }}>
-              {file.name}
-            </Typography>
+          {files && files.length > 0 && (
+                <Typography sx={{ mt: 0.5, color: "#333", fontWeight: 600 }}>
+              {files.length === 1
+                ? files[0].name
+                : `${files.length} images selected`}
+                </Typography>
           )}
         </Box>
 
@@ -156,25 +157,38 @@ const ImageUpload = ({ setResult }) => {
           )}
         />
 
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          variant="contained"
-          fullWidth
-          disabled={loading}
-          sx={{
-            py: 1.8,
-            background: "linear-gradient(135deg,#1976d2,#21cbf3)",
-            boxShadow: "0 8px 22px rgba(33,203,243,0.3)",
-            transition: "all 0.3s ease",
-            "&:hover": {
-              boxShadow: "0 12px 30px rgba(33,203,243,0.5)",
-              transform: "translateY(-2px)",
-            },
-          }}
-        >
-          {loading ? "Processing..." : "Upload & Detect"}
-        </Button>
+        {/* Submit and Previous Results Buttons */}
+        <Box sx={{ display: "flex", flexDirection: "row", gap: 2, alignItems: "center" }}>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={loading}
+            sx={{
+              py: 1.8,
+              background: "linear-gradient(135deg,#1976d2,#21cbf3)",
+              boxShadow: "0 8px 22px rgba(33,203,243,0.3)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                boxShadow: "0 12px 30px rgba(33,203,243,0.5)",
+                transform: "translateY(-2px)",
+              },
+            }}
+            fullWidth
+          >
+            {loading ? "Processing..." : "Upload & Detect"}
+          </Button>
+        </Box>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => navigate("/results")}
+            fullWidth
+            sx={{ fontWeight: 700, py: 1.4, minWidth: 160 }}
+          >
+            Previous Results
+          </Button>
+        </Box>
 
         {loading && <Loader />}
       </Box>

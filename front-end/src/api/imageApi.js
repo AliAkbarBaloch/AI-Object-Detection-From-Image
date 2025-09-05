@@ -1,4 +1,25 @@
+
 import api from "./axiosConfig";
+
+// Batch upload for multiple images
+export const uploadImagesBatch = async (files, itemType) => {
+  const user_id = localStorage.getItem("user_id");
+  if (!user_id) {
+    throw new Error("User is not logged in");
+  }
+  const formData = new FormData();
+  for (let file of files) {
+    formData.append("images", file);
+  }
+  formData.append("item_type", itemType);
+  formData.append("user_id", user_id);
+  const { data } = await api.post("Counting/batch_count", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    method: "POST",
+    body: formData,
+  });
+  return data;
+};
 
 export const uploadImage = async (file, itemType) => {
   const user_id = localStorage.getItem("user_id");

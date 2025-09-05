@@ -17,9 +17,9 @@ else:
     db = None
     results_collection = None
     users_collection = None
+# results_collection.delete_many({}) ##Deleting Records from Collection
 
-
-def save_result(image_path, item_type, model_count, user_correction=None, user_id: str | None = None):
+def save_result(image_path, item_type, model_count, user_correction=None, user_id: str | None = None, segmentation_image_path: str | None = None, matched_segment_image_paths: list[str] | None = None, matched_segments: list[dict] | None = None, matched_segments_merged_path: str | None = None):
     if results_collection is None:
         return "ci-dummy-id"
     result = {
@@ -28,7 +28,11 @@ def save_result(image_path, item_type, model_count, user_correction=None, user_i
         'item_type': item_type,
         'model_count': model_count,
         'user_id': user_id,
-        'user_correction': user_correction
+    'user_correction': user_correction,
+    'segmentation_image_path': segmentation_image_path,
+    'matched_segment_image_paths': matched_segment_image_paths or [],
+    'matched_segments': matched_segments or [],
+    'matched_segments_merged_path': matched_segments_merged_path
     }
    # return results_collection.insert_one(result).inserted_id
     inserted_id = results_collection.insert_one(result).inserted_id
