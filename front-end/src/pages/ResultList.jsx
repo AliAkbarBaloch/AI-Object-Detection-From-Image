@@ -184,6 +184,11 @@ const ResultsPage = () => {
                       <Typography sx={{ fontSize: 'inherit', textAlign: 'center' }}><strong>Model Count:</strong> {result.model_count}</Typography>
                       <Typography sx={{ fontSize: 'inherit', textAlign: 'center' }}><strong>User Correction:</strong> {result.user_correction || 'None'}</Typography>
                     </Box>
+                    {typeof result.count_confidence === 'number' && (
+                      <Typography sx={{ fontSize: { xs: '0.9rem', sm: '1rem' }, color: '#333', textAlign: 'center', mb: 2 }}>
+                        <strong>Count Confidence:</strong> {(result.count_confidence * 100).toFixed(1)}%
+                      </Typography>
+                    )}
                     <Button
                       variant="contained"
                       onClick={() => {
@@ -194,11 +199,13 @@ const ResultsPage = () => {
                           || (result.matched_segments_merged_path ? `http://localhost:5000/${result.matched_segments_merged_path}` : null);
                         const normalizedMatches = (() => {
                           if (Array.isArray(result.matched_segments) && result.matched_segments.length) {
-                            return result.matched_segments.map((m) => ({
+                              return result.matched_segments.map((m) => ({
                               url: m.url || (m.path ? `http://localhost:5000/${m.path}` : (m.filename ? `http://localhost:5000/uploads/${m.filename}` : '')),
                               label: m.label || 'N/A',
                               predicted_class: m.predicted_class || 'N/A',
-                              path: m.path || (m.filename ? `uploads/${m.filename}` : undefined),
+                                label_conf: m.label_conf,
+                                class_conf: m.class_conf,
+                                path: m.path || (m.filename ? `uploads/${m.filename}` : undefined),
                             })).filter(x => !!x.url);
                           }
                           if (Array.isArray(result.matched_segment_image_paths) && result.matched_segment_image_paths.length) {
@@ -299,6 +306,8 @@ function ThumbnailsWithCaptions({ items, cardKey }) {
         <Box key={`${cardKey}-${i}`} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Typography variant="caption" sx={{ color: '#000', fontWeight: 700 }}>
             Predicted_Class: {m.predicted_class} | Label: {m.label}
+            {typeof m.label_conf === 'number' ? ` | LabelConf: ${(m.label_conf*100).toFixed(0)}%` : ''}
+            {typeof m.class_conf === 'number' ? ` | ClassConf: ${(m.class_conf*100).toFixed(0)}%` : ''}
           </Typography>
           <Box sx={{ width: '100%', aspectRatio: '1 / 1', borderRadius: 2, overflow: 'hidden', background: '#f5f5f7', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}>
             <img src={m.url || (m.path ? `http://localhost:5000/${m.path}` : '')} alt={`Match ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

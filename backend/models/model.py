@@ -94,13 +94,17 @@ def count_objects(image_path, item_type):
     image_processor = AutoImageProcessor.from_pretrained("microsoft/resnet-50")
     class_model = AutoModelForImageClassification.from_pretrained("microsoft/resnet-50")
     predicted_classes = []
+    predicted_class_confs = []
     for segment in segments:
         inputs = image_processor(images=segment, return_tensors="pt")
         outputs = class_model(**inputs)
         logits = outputs.logits
         predicted_class_idx = logits.argmax(-1).item()
+        probs = F.softmax(logits, dim=-1)
+        class_conf = probs[0, predicted_class_idx].item()
         predicted_class = class_model.config.id2label[predicted_class_idx]
         predicted_classes.append(predicted_class)
+        predicted_class_confs.append(class_conf)
 
     label_classifier = pipeline("zero-shot-classification", model="typeform/distilbert-base-uncased-mnli")
     candidate_labels = [
@@ -115,10 +119,13 @@ def count_objects(image_path, item_type):
         "hardware",
     ]
     labels = []
+    label_confs = []
     for predicted_class in predicted_classes:
         result = label_classifier(predicted_class, candidate_labels=candidate_labels)
         label = result['labels'][0]
         labels.append(label)
+        score = result['scores'][0] if 'scores' in result and len(result['scores']) > 0 else None
+        label_confs.append(score)
 
     # Save images for segments whose label matches the requested item_type
     matched_segment_filenames: list[str] = []
@@ -139,7 +146,9 @@ def count_objects(image_path, item_type):
             matched_segments_meta.append({
                 'filename': match_filename,
                 'label': label,
-                'predicted_class': pclass
+                'predicted_class': pclass,
+                'class_conf': predicted_class_confs[idx] if idx < len(predicted_class_confs) else None,
+                'label_conf': label_confs[idx] if idx < len(label_confs) else None,
             })
         # Build a merged composite image out of the matched segments to have a single URL
         if len(matched_segment_filenames) > 0:
@@ -200,8 +209,14 @@ def count_objects(image_path, item_type):
         merged_matches_filename = None
 
     count = sum(1 for label in labels if label == item_type)
+    try:
+        conf_values = [c for l, c in zip(labels, label_confs) if l == item_type and c is not None]
+        count_confidence = float(sum(conf_values) / len(conf_values)) if conf_values else 0.0
+    except Exception:
+        count_confidence = 0.0
     return {
         'count': count,
+        'count_confidence': count_confidence,
         'labels': labels,
         'segments': len(segments),
         # Return the saved segmentation file name so the API layer can expose a URL

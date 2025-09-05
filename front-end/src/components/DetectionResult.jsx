@@ -53,7 +53,7 @@ const DetectionResult = ({ result }) => {
             if (Array.isArray(res.matched_segments) && res.matched_segments.length) {
               for (const m of res.matched_segments) {
                 const url = m.url || (m.path ? `http://localhost:5000/${m.path}` : (m.filename ? `http://localhost:5000/uploads/${m.filename}` : null));
-                if (url) items.push({ url, label: m.label || 'N/A', predicted_class: m.predicted_class || 'N/A' });
+                if (url) items.push({ url, label: m.label || 'N/A', predicted_class: m.predicted_class || 'N/A', label_conf: m.label_conf, class_conf: m.class_conf });
               }
             }
             if (!items.length && Array.isArray(res.matched_segment_urls)) {
@@ -120,6 +120,8 @@ const DetectionResult = ({ result }) => {
                             </Box>
                             <Typography variant="caption" sx={{ color: '#444', fontWeight: 700 }}>
                               Predicted_Class: {m.predicted_class} | Label: {m.label}
+                              {typeof m.label_conf === 'number' ? ` | LabelConf: ${(m.label_conf*100).toFixed(0)}%` : ''}
+                              {typeof m.class_conf === 'number' ? ` | ClassConf: ${(m.class_conf*100).toFixed(0)}%` : ''}
                             </Typography>
                           </Box>
                         ))}
@@ -127,9 +129,14 @@ const DetectionResult = ({ result }) => {
                     ) : null}
                   </Box>
                 )}
-                <Typography sx={{ mb: { xs: 0.75, sm: 1 }, fontSize: { xs: "1rem", sm: "1.1rem" }, color: "#333" }}>
+                <Typography sx={{ mb: { xs: 0.5, sm: 0.75 }, fontSize: { xs: "1rem", sm: "1.1rem" }, color: "#333" }}>
                   <strong>Model Count:</strong> {conter}
                 </Typography>
+                {typeof res.count_confidence === 'number' && (
+                  <Typography sx={{ mb: { xs: 0.75, sm: 1.25 }, fontSize: { xs: "0.95rem", sm: "1rem" }, color: "#333" }}>
+                    <strong>Count Confidence:</strong> {(res.count_confidence * 100).toFixed(1)}%
+                  </Typography>
+                )}
                 <Typography sx={{ mb: { xs: 0.75, sm: 1.25 }, fontSize: { xs: "1rem", sm: "1.1rem" }, color: "#333" }}>
                   <strong>User Correction:</strong> {userCorrection}
                 </Typography>

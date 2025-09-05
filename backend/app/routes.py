@@ -73,7 +73,7 @@ class BatchCountResource(Resource):
                 merged_matches_filename = result.get('matched_segments_merged_filename')
                 merged_matches_path = f"uploads/{merged_matches_filename}" if merged_matches_filename else None
                 try:
-                    result_id = save_result(db_image_path, item_type, result['count'], "", user_id, segmentation_image_path=seg_image_path, matched_segment_image_paths=matched_segment_image_paths, matched_segments=matched_segments_meta, matched_segments_merged_path=merged_matches_path)
+                    result_id = save_result(db_image_path, item_type, result['count'], "", user_id, segmentation_image_path=seg_image_path, matched_segment_image_paths=matched_segment_image_paths, matched_segments=matched_segments_meta, matched_segments_merged_path=merged_matches_path, count_confidence=result.get('count_confidence'))
                 except Exception as e:
                     results.append({'filename': filename, 'error': f'Database error: {str(e)}'})
                     continue
@@ -85,6 +85,8 @@ class BatchCountResource(Resource):
                         'url': request.host_url.rstrip('/') + f"/uploads/{m.get('filename')}",
                         'label': m.get('label'),
                         'predicted_class': m.get('predicted_class'),
+                        'label_conf': m.get('label_conf'),
+                        'class_conf': m.get('class_conf'),
                         'path': f"uploads/{m.get('filename')}"
                     }
                     for m in matched_segments_meta
@@ -94,6 +96,7 @@ class BatchCountResource(Resource):
                     'filename': filename,
                     'result_id': str(result_id),
                     'count': result['count'],
+                    'count_confidence': result.get('count_confidence'),
                     'labels': result['labels'],
                     'segments': result['segments'],
                     'image_url': image_url,
@@ -181,7 +184,7 @@ class CountResource(Resource):
             merged_matches_filename = result.get('matched_segments_merged_filename')
             merged_matches_path = f"uploads/{merged_matches_filename}" if merged_matches_filename else None
             try:
-                result_id = save_result(db_image_path, item_type, result['count'],"",user_id, segmentation_image_path=seg_image_path, matched_segment_image_paths=matched_segment_image_paths, matched_segments=matched_segments_meta, matched_segments_merged_path=merged_matches_path)
+                result_id = save_result(db_image_path, item_type, result['count'],"",user_id, segmentation_image_path=seg_image_path, matched_segment_image_paths=matched_segment_image_paths, matched_segments=matched_segments_meta, matched_segments_merged_path=merged_matches_path, count_confidence=result.get('count_confidence'))
             except Exception as e:
                 return {'error': f'Database error: {str(e)}'}, 500
             # Best-effort: also persist a string 'result_id' field into the same document for convenient lookups
@@ -199,6 +202,8 @@ class CountResource(Resource):
                     'url': request.host_url.rstrip('/') + f"/uploads/{m.get('filename')}",
                     'label': m.get('label'),
                     'predicted_class': m.get('predicted_class'),
+                    'label_conf': m.get('label_conf'),
+                    'class_conf': m.get('class_conf'),
                     'path': f"uploads/{m.get('filename')}"
                 }
                 for m in matched_segments_meta
@@ -208,6 +213,7 @@ class CountResource(Resource):
             return {
                 'result_id': str(result_id),
                 'count': result['count'],
+                'count_confidence': result.get('count_confidence'),
                 'labels': result['labels'],
                 'segments': result['segments'],
                 'image_url': image_url,
