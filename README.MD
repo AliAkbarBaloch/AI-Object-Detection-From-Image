@@ -1,16 +1,3 @@
-> Complete this template and keep it at the top of your README. Delete this instruction.
-
-
-# Group 2
-
-| Name                | Email                      | FIM ID      |
-|---------------------|----------------------------|-------------|
-| Ali Akbar           | akbar01@ads.uni-passau.de  | @akbar      |
-| Saeid Khalilian     | khalil10@ads.uni-passau.de | @khalilian  |
-| Yunus Emre Balkis   | balkis01@ads.uni-passau.de | @balkis     |
-
----
-
 ## Project Overview
 
 This repository contains the Week 1 solution for the AI Engineering Lab. It includes:
