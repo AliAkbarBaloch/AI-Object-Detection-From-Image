@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { uploadImage, uploadImagesBatch } from "../api/imageApi";
-import { Card, CardContent, Button, Typography, Box, TextField, Autocomplete } from "@mui/material";
+import { Card, CardContent, Button, Typography, Box, TextField, Autocomplete, Chip } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import Loader from "./Loader";
 import { useSnackbar } from "notistack";
@@ -113,11 +113,36 @@ const ImageUpload = ({ setResult }) => {
           </Button>
 
           {files && files.length > 0 && (
-                <Typography sx={{ mt: 0.5, color: "#333", fontWeight: 600 }}>
-              {files.length === 1
-                ? files[0].name
-                : `${files.length} images selected`}
-                </Typography>
+            <Box sx={{ mt: 1 }}>
+              <Typography sx={{ color: "#333", fontWeight: 600 }}>
+                {files.length === 1
+                  ? "1 image selected:"
+                  : `${files.length} images selected:`}
+              </Typography>
+              <Box
+                sx={{
+                  mt: 0.75,
+                  maxHeight: 140,
+                  overflowY: "auto",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                }}
+              >
+        {files.map((file, idx) => (
+                  <Chip
+          key={`${file.name}-${idx}`}
+                    label={file.name}
+                    size="small"
+                    sx={{
+                      bgcolor: "#eef2f7",
+                      border: "1px solid #d0d7de",
+                      color: "#333",
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
           )}
         </Box>
 
